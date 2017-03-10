@@ -6,18 +6,20 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
+import org.apache.log4j.Logger;
 
 /**
  * Created by IFT8 on 16/8/23.
  */
 public class PoolingHttpClientManager {
+    final static Logger logger = Logger.getLogger(PoolingHttpClientManager.class);
     private final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
     private CloseableHttpClient client;
 
     public PoolingHttpClientManager(int maxConnTotal, int soTimeout, int connectionTimeout) {
         //设置连接数
         setCMMaxConnTotal(maxConnTotal);
-        
+
         //默认配置
         RequestConfig defaultRequestConfig = RequestConfig.custom()
                 //服务器返回数据(response)的时间
@@ -58,9 +60,8 @@ public class PoolingHttpClientManager {
 
     public CloseableHttpClient getHttpClient() {
 
-        //return client;
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setConnectionManager(cm).build();
+        return client;
+        //return HttpClients.custom().setConnectionManager(cm).build();
     }
 
     public PoolStats getTotalStats() {

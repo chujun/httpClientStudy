@@ -1,10 +1,5 @@
 package com.jun.chu.java.pool;
 
-import me.ele.elog.Log;
-import me.ele.elog.LogFactory;
-import me.ele.lpd.core.util.JsonUtils;
-import me.ele.ts.server.constants.MessageConstants;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpVersion;
@@ -19,6 +14,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +27,8 @@ import java.util.Map;
  */
 public class HttpUtils {
 
-    //final static Log logger = LogFactory.getLog(HttpUtils.class);
+    final static Logger logger = Logger.getLogger(HttpUtils.class);
+
 
     private static final String APPLICATION_JSON = "application/json";
 
@@ -78,7 +75,7 @@ public class HttpUtils {
     public static String doPostWithJsonRequestParams(CloseableHttpClient client, String url, String jsonParam, Header[] headers) {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setProtocolVersion(HttpVersion.HTTP_1_1);
-        if (ArrayUtils.isNotEmpty(headers)) {
+        if (null != headers && headers.length > 0) {
             //自定义请求头Header
             httpPost.setHeaders(headers);
         }
@@ -94,19 +91,21 @@ public class HttpUtils {
                 return EntityUtils.toString(response.getEntity());
             } else {
                 EntityUtils.consume(response.getEntity());
-                //logger.error("处理Http结果出错url={},jsonParam={}", url, jsonParam);
+                logger.error(String.format("处理Http结果出错url=%s,jsonParam=%s", url, jsonParam));
                 //throw MessageConstants.http_status_error;
+                throw new RuntimeException("处理Http结果出错url");
             }
         } catch (IOException e) {
-            //logger.error("请求Http接口出错url={},jsonParam={}", url, jsonParam, e);
+            logger.error(String.format("请求Http接口出错url=%s,jsonParam=%s", url, jsonParam), e);
             //throw MessageConstants.http_request_error;
+            throw new RuntimeException("请求Http接口出错");
         } finally {
             if (response != null) {
                 try {
                     EntityUtils.consume(response.getEntity());
                     response.close();
                 } catch (IOException e) {
-              //      logger.error("关闭Http出错url={},jsonParam={},msg={}", url, jsonParam, e);
+                    logger.error(String.format("关闭Http出错url=%s,jsonParam=%s,msg=%s", url, jsonParam, e.getMessage()), e);
                 } finally {
                     response = null;
                 }
@@ -126,30 +125,32 @@ public class HttpUtils {
     public static String doGetWithRequestParams(CloseableHttpClient client, String url, Header[] headers) {
         HttpGet httpGet = new HttpGet(url);
         httpGet.setProtocolVersion(HttpVersion.HTTP_1_1);
-        if (ArrayUtils.isNotEmpty(headers)) {
+        if (null != headers && headers.length > 0) {
             //自定义请求头Header
             httpGet.setHeaders(headers);
         }
-        CloseableHttpResponse response=null;
+        CloseableHttpResponse response = null;
         try {
             response = client.execute(httpGet);
             if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
                 return EntityUtils.toString(response.getEntity());
             } else {
                 EntityUtils.consume(response.getEntity());
-                logger.error("处理Http结果出错url={}", url);
-                throw MessageConstants.http_status_error;
+                logger.error(String.format("处理Http结果出错url=%s", url));
+                //throw MessageConstants.http_status_error;
+                throw new RuntimeException("处理Http结果出错url");
             }
         } catch (IOException e) {
-            logger.error("请求Http接口出错url={}", url, e);
-            throw MessageConstants.http_request_error;
+            logger.error(String.format("请求Http接口出错url=%s", url), e);
+            //throw MessageConstants.http_request_error;
+            throw new RuntimeException("请求Http接口出错url");
         } finally {
             if (response != null) {
                 try {
                     EntityUtils.consume(response.getEntity());
                     response.close();
                 } catch (IOException e) {
-                    logger.error("关闭Http出错url={},msg={}", url, e);
+                    logger.error(String.format("关闭Http出错url=%s,msg=%s", url, e.getMessage()), e);
                 } finally {
                     response = null;
                 }
