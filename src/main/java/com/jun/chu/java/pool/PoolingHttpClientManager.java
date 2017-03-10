@@ -1,7 +1,13 @@
 package com.jun.chu.java.pool;
 
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -13,8 +19,26 @@ import org.apache.log4j.Logger;
  */
 public class PoolingHttpClientManager {
     final static Logger logger = Logger.getLogger(PoolingHttpClientManager.class);
-    private final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+    private static PoolingHttpClientConnectionManager cm = null;
     private CloseableHttpClient client;
+
+    static {
+        init();
+    }
+
+    private static void init() {
+        //
+        ConnectionSocketFactory plainsf = PlainConnectionSocketFactory
+                .getSocketFactory();
+        LayeredConnectionSocketFactory sslsf = SSLConnectionSocketFactory
+                .getSocketFactory();
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("http", plainsf)
+                .register("https", sslsf)
+                .build();
+        cm = new PoolingHttpClientConnectionManager(
+                registry);
+    }
 
     public PoolingHttpClientManager(int maxConnTotal, int soTimeout, int connectionTimeout) {
         //设置连接数

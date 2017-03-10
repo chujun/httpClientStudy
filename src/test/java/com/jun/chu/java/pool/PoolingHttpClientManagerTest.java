@@ -55,7 +55,8 @@ public class PoolingHttpClientManagerTest {
 
         CloseableHttpClient httpClient = cm.getHttpClient();
         logger.info(JsonUtils.toJson(new Date()));
-        HttpUtils.doGetWithRequestParams(cm.getHttpClient(), getRandomGetRequest(), null);
+        String response = HttpUtils.doGetWithRequestParams(cm.getHttpClient(), getRandomGetRequest(), null);
+        System.out.println(response);
     }
 
     private static String getRandomGetRequest() {
