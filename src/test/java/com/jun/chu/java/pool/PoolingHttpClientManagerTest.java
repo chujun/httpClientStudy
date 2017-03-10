@@ -1,8 +1,14 @@
 package com.jun.chu.java.pool;
 
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.pool.PoolStats;
 import org.apache.log4j.Logger;
 import org.junit.Test;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by chujun on 2017/3/10.
@@ -19,10 +25,23 @@ public class PoolingHttpClientManagerTest {
 
     @Test
     public void case02() {
+        //1.启动监视线程
         startMonitorThread();
-        int count = 300;
+        //2.启动多线程
+        int count = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
         for (int i = 0; i < count; i++) {
-            sendGetRequest();
+            executorService.execute(() -> {
+                sendGetRequest();
+            });
+        }
+
+        while (!executorService.isTerminated()) {
+            try {
+                executorService.awaitTermination(100, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -32,8 +51,15 @@ public class PoolingHttpClientManagerTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        CloseableHttpClient httpClient = cm.getHttpClient();
+        logger.info();
+        HttpUtils.doGetWithRequestParams(cm.getHttpClient(), getRandomGetRequest(), null);
+    }
+
+    private static String getRandomGetRequest() {
         String baiduPage = "https://www.baidu.com/";
-        HttpUtils.doGetWithRequestParams(cm.getHttpClient(), baiduPage, null);
+        return baiduPage;
     }
 
     private void startMonitorThread() {
@@ -41,7 +67,7 @@ public class PoolingHttpClientManagerTest {
             while (true) {
                 logger.info(cm.getTotalStats());
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
