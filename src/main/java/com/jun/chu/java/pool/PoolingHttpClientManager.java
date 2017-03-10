@@ -40,7 +40,7 @@ public class PoolingHttpClientManager {
         cm.setDefaultMaxPerRoute(maxConnTotal);
     }
 
-    private CloseableHttpClient getHttpClient(RequestConfig defaultRequestConfig) {
+    private CloseableHttpClient getHttpClient(RequestConfig requestConfig) {
         //Socket Config
         SocketConfig defaultSocketConfig = SocketConfig.custom()
                 .setSoKeepAlive(true)
@@ -52,19 +52,18 @@ public class PoolingHttpClientManager {
 
         return HttpClients.custom()
                 .setConnectionManager(cm)
-                //默认请求配置
-                .setDefaultRequestConfig(defaultRequestConfig)
+                //请求配置
+                .setDefaultRequestConfig(requestConfig)
+                //socket配置
                 .setDefaultSocketConfig(defaultSocketConfig)
                 .build();
     }
 
     public CloseableHttpClient getHttpClient() {
-
         return client;
-        //return HttpClients.custom().setConnectionManager(cm).build();
     }
 
     public PoolStats getTotalStats() {
-        return this.cm.getTotalStats();
+        return cm.getTotalStats();
     }
 }
