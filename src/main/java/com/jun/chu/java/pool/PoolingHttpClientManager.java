@@ -33,6 +33,15 @@ public class PoolingHttpClientManager {
         client = getHttpClient(defaultRequestConfig);
     }
 
+    public CloseableHttpClient getHttpClient() {
+        return client;
+    }
+
+    public PoolStats getTotalStats() {
+        return cm.getTotalStats();
+    }
+
+
     private void setCMMaxConnTotal(int maxConnTotal) {
         //设置连接数
         cm.setMaxTotal(maxConnTotal);
@@ -59,11 +68,5 @@ public class PoolingHttpClientManager {
                 .build();
     }
 
-    public CloseableHttpClient getHttpClient() {
-        return client;
-    }
 
-    public PoolStats getTotalStats() {
-        return cm.getTotalStats();
-    }
 }
