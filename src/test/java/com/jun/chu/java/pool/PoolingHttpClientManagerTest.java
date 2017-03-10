@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -60,8 +61,12 @@ public class PoolingHttpClientManagerTest {
     }
 
     private static String getRandomGetRequest() {
-        String baiduPage = "https://www.baidu.com/";
-        return baiduPage;
+        String[] page = new String[]{
+                "https://www.baidu.com/",
+                "http://hc.apache.org/httpcomponents-client-4.5.x/tutorial/html/connmgmt.html#d5e431",
+                "http://192.168.8.28:28106/#ytyy"
+        };
+        return page[new Random().nextInt(1)];
     }
 
     private void startMonitorThread() {

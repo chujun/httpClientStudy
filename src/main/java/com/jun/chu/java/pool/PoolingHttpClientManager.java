@@ -27,7 +27,7 @@ public class PoolingHttpClientManager {
     }
 
     private static void init() {
-        //
+        //默认
         ConnectionSocketFactory plainsf = PlainConnectionSocketFactory
                 .getSocketFactory();
         LayeredConnectionSocketFactory sslsf = SSLConnectionSocketFactory
@@ -63,6 +63,10 @@ public class PoolingHttpClientManager {
 
     public PoolStats getTotalStats() {
         return cm.getTotalStats();
+    }
+
+    public void shutDown() {
+        cm.shutdown();
     }
 
 
