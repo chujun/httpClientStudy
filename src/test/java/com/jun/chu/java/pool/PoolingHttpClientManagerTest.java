@@ -1,11 +1,12 @@
 package com.jun.chu.java.pool;
 
+import com.jun.chu.java.util.JsonUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.pool.PoolStats;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import java.util.concurrent.Executor;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PoolingHttpClientManagerTest {
     final static Logger logger = Logger.getLogger(PoolingHttpClientManagerTest.class);
-    private static final PoolingHttpClientManager cm = new PoolingHttpClientManager(100, 3000, 2000);
+    private static final PoolingHttpClientManager cm = new PoolingHttpClientManager(5, 3000, 2000);
 
     @Test
     public void case01() {
@@ -24,7 +25,7 @@ public class PoolingHttpClientManagerTest {
     }
 
     @Test
-    public void case02() {
+    public void case02_multi_thread_test() {
         //1.启动监视线程
         startMonitorThread();
         //2.启动多线程
@@ -53,7 +54,7 @@ public class PoolingHttpClientManagerTest {
         }
 
         CloseableHttpClient httpClient = cm.getHttpClient();
-        logger.info();
+        logger.info(JsonUtils.toJson(new Date()));
         HttpUtils.doGetWithRequestParams(cm.getHttpClient(), getRandomGetRequest(), null);
     }
 
