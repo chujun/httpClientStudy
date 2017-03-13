@@ -73,9 +73,10 @@ public class PoolingHttpClientManager {
      * @return
      */
     private SSLContext createSSLContextWithSSLAuth() {
+        FileInputStream fileInputStream = null;
         try {
             KeyStore trustedStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            FileInputStream fileInputStream = new FileInputStream(keyStorePath);
+            fileInputStream = new FileInputStream(keyStorePath);
             //相信自己的CA和所有自签名的证书
             trustedStore.load(fileInputStream, keyStorePass.toCharArray());
             return SSLContexts.custom().loadTrustMaterial(trustedStore, new TrustSelfSignedStrategy()).build();
@@ -95,6 +96,14 @@ public class PoolingHttpClientManager {
         } catch (KeyManagementException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
+        }finally {
+            if(null != fileInputStream){
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

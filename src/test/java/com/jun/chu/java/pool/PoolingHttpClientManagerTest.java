@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PoolingHttpClientManagerTest {
     final static Logger logger = Logger.getLogger(PoolingHttpClientManagerTest.class);
-    private static final PoolingHttpClientManager cm = new PoolingHttpClientManager(10, 3000, 2000);
+    private static final PoolingHttpClientManager cm = new PoolingHttpClientManager(10, 3000, 2000,true);
 
     @Test
     public void case01() {
