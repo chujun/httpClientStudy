@@ -58,7 +58,11 @@ public class PoolingHttpClientManager {
                 .build();
 
         client = getHttpClient(defaultRequestConfig);
-        //守护进程启动
+        //TODO:cj to be confirmed needed 清理空闲连接守护进程启动
+        startIdleConnectionEvictor();
+    }
+
+    private void startIdleConnectionEvictor() {
         idleConnectionEvictor = new IdleConnectionEvictor(cm, 5, TimeUnit.SECONDS);
         idleConnectionEvictor.start();
     }
