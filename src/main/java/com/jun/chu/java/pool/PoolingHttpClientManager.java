@@ -10,9 +10,12 @@ import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.IdleConnectionEvictor;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
 import org.apache.log4j.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by IFT8 on 16/8/23.
@@ -22,11 +25,10 @@ public class PoolingHttpClientManager {
     private static PoolingHttpClientConnectionManager cm = null;
     private CloseableHttpClient client;
 
-    static {
-        init();
-    }
+    //守护线程清理关闭闲置连接
+    private IdleConnectionEvictor idleConnectionEvictor = null;
 
-    private static void init() {
+    private void init() {
         //默认
         ConnectionSocketFactory plainsf = PlainConnectionSocketFactory
                 .getSocketFactory();
@@ -41,6 +43,7 @@ public class PoolingHttpClientManager {
     }
 
     public PoolingHttpClientManager(int maxConnTotal, int soTimeout, int connectionTimeout) {
+        init();
         //设置连接数
         setCMMaxConnTotal(maxConnTotal);
 
@@ -55,6 +58,9 @@ public class PoolingHttpClientManager {
                 .build();
 
         client = getHttpClient(defaultRequestConfig);
+        //守护进程启动
+        idleConnectionEvictor = new IdleConnectionEvictor(cm, 5, TimeUnit.SECONDS);
+        idleConnectionEvictor.start();
     }
 
     public CloseableHttpClient getHttpClient() {
