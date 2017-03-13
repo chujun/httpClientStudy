@@ -5,35 +5,56 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.IdleConnectionEvictor;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.log4j.Logger;
 
+import javax.net.ssl.SSLContext;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by IFT8 on 16/8/23.
+ * Created by jun.chu on 16/8/23.
+ * 支持http,https协议
  */
 public class PoolingHttpClientManager {
     final static Logger logger = Logger.getLogger(PoolingHttpClientManager.class);
     private static PoolingHttpClientConnectionManager cm = null;
     private CloseableHttpClient client;
 
+    /**
+     * 密钥库路径
+     */
+    private String keyStorePath = "";
+
+    /**
+     * 密钥库秘钥
+     */
+    private String keyStorePass = "";
+
     //守护线程清理关闭闲置连接
     private IdleConnectionEvictor idleConnectionEvictor = null;
 
-    private void init() {
+    private void initPoolingHttpClientManager(boolean isAuth) {
         //默认
-        ConnectionSocketFactory plainsf = PlainConnectionSocketFactory
-                .getSocketFactory();
-        LayeredConnectionSocketFactory sslsf = SSLConnectionSocketFactory
-                .getSocketFactory();
+        ConnectionSocketFactory plainsf = PlainConnectionSocketFactory.getSocketFactory();
+
+        //ConnectionSocketFactory sslsf = SSLConnectionSocketFactory.getSocketFactory();
+        ConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(createSSLContext(isAuth));
         Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", plainsf)
                 .register("https", sslsf)
@@ -42,8 +63,47 @@ public class PoolingHttpClientManager {
                 registry);
     }
 
+    private SSLContext createSSLContext(boolean isAuth) {
+        return isAuth ? createSSLContextWithSSLAuth() : SSLContexts.createDefault();
+    }
+
+    /**
+     * 获取ssl验证的SSLContext
+     *
+     * @return
+     */
+    private SSLContext createSSLContextWithSSLAuth() {
+        try {
+            KeyStore trustedStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            FileInputStream fileInputStream = new FileInputStream(keyStorePath);
+            //相信自己的CA和所有自签名的证书
+            trustedStore.load(fileInputStream, keyStorePass.toCharArray());
+            return SSLContexts.custom().loadTrustMaterial(trustedStore, new TrustSelfSignedStrategy()).build();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+            throw new RuntimeException("create keyStore failed", e);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException(keyStorePath, e);
+        } catch (CertificateException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
     public PoolingHttpClientManager(int maxConnTotal, int soTimeout, int connectionTimeout) {
-        init();
+        this(maxConnTotal, soTimeout, connectionTimeout, false);
+    }
+
+    public PoolingHttpClientManager(int maxConnTotal, int soTimeout, int connectionTimeout, boolean isSSLAuth) {
+        initPoolingHttpClientManager(isSSLAuth);
         //设置连接数
         setCMMaxConnTotal(maxConnTotal);
 
