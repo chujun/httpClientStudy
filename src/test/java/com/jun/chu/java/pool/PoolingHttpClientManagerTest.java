@@ -1,12 +1,9 @@
 package com.jun.chu.java.pool;
 
-import com.jun.chu.java.util.JsonUtils;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.pool.PoolStats;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PoolingHttpClientManagerTest {
     final static Logger logger = Logger.getLogger(PoolingHttpClientManagerTest.class);
-    private static final PoolingHttpClientManager cm = new PoolingHttpClientManager(10, 3000, 2000,true);
+    private static final PoolingHttpClientManager cm = new PoolingHttpClientManager(10, 3000, 2000);
 
     @Test
     public void case01() {

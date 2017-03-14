@@ -32,6 +32,15 @@ public class HttpUtils {
 
     private static final String APPLICATION_JSON = "application/json";
 
+    /**
+     * 表单提交方式,post方法请求
+     * @param httpClient
+     * @param url
+     * @param paramsMap
+     * @return
+     * @throws ClientProtocolException
+     * @throws IOException
+     */
     public static String doPostWithClient(CloseableHttpClient httpClient, String url, Map<String, Object> paramsMap)
             throws ClientProtocolException, IOException {
         HttpPost httpPost = new HttpPost(url);

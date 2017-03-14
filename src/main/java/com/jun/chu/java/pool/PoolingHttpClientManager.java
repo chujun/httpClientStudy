@@ -49,12 +49,12 @@ public class PoolingHttpClientManager {
     //守护线程清理关闭闲置连接
     private IdleConnectionEvictor idleConnectionEvictor = null;
 
-    private void initPoolingHttpClientManager(boolean isAuth) {
+    private void initPoolingHttpClientManager(boolean isSSLAuth) {
         //默认
         ConnectionSocketFactory plainsf = PlainConnectionSocketFactory.getSocketFactory();
 
         //ConnectionSocketFactory sslsf = SSLConnectionSocketFactory.getSocketFactory();
-        ConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(createSSLContext(isAuth));
+        ConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(createSSLContext(isSSLAuth));
         Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", plainsf)
                 .register("https", sslsf)
@@ -63,8 +63,8 @@ public class PoolingHttpClientManager {
                 registry);
     }
 
-    private SSLContext createSSLContext(boolean isAuth) {
-        return isAuth ? createSSLContextWithSSLAuth() : SSLContexts.createDefault();
+    private SSLContext createSSLContext(boolean isSSLAuth) {
+        return isSSLAuth ? createSSLContextWithSSLAuth() : SSLContexts.createDefault();
     }
 
     /**
