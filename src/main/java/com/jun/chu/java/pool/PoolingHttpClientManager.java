@@ -40,12 +40,12 @@ public class PoolingHttpClientManager {
     private CloseableHttpClient client;
 
     /**
-     * 密钥库路径
+     * 密钥库路径,和tomcat中配置的https中的keystoreFile相同
      */
     private String keyStorePath = "./src/main/resources/crt/tomcat.keystore";
 
     /**
-     * 密钥库秘钥
+     * 密钥库秘钥,和tomcat中配置的https中的keystorePass相同
      */
     private String keyStorePass = "tomcat";
 
