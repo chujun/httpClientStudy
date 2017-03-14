@@ -86,6 +86,34 @@ public class PoolingHttpClientManagerTest {
         sendPostRequest(sslAuthCM.getHttpClient());
     }
 
+    @Test
+    public void case03_multi_thread_test_https_post_with_ssl_auth() throws IOException {
+        final PoolingHttpClientManager sslAuthCM = new PoolingHttpClientManager(10, 6000, 5000, true);
+        //1.启动监视线程
+        startMonitorThread();
+        //2.启动多线程
+        int count = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        for (int i = 0; i < count; i++) {
+            executorService.execute(() -> {
+                try {
+                    sendPostRequest(sslAuthCM.getHttpClient());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        while (!executorService.isTerminated()) {
+            try {
+                executorService.awaitTermination(100, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
 
     private void sendPostRequest(CloseableHttpClient httpClient) throws IOException {
         Map<String, Object> map = new HashMap<>();
