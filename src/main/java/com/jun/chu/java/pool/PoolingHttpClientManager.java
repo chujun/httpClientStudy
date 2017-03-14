@@ -6,6 +6,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -54,7 +55,7 @@ public class PoolingHttpClientManager {
         ConnectionSocketFactory plainsf = PlainConnectionSocketFactory.getSocketFactory();
 
         //ConnectionSocketFactory sslsf = SSLConnectionSocketFactory.getSocketFactory();
-        ConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(createSSLContext(isSSLAuth));
+        ConnectionSocketFactory sslsf = createConnectionSocketFactory(isSSLAuth);
         Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", plainsf)
                 .register("https", sslsf)
@@ -63,8 +64,9 @@ public class PoolingHttpClientManager {
                 registry);
     }
 
-    private SSLContext createSSLContext(boolean isSSLAuth) {
-        return isSSLAuth ? createSSLContextWithSSLAuth() : SSLContexts.createDefault();
+    private ConnectionSocketFactory createConnectionSocketFactory(boolean isSSLAuth) {
+        return isSSLAuth ? new SSLConnectionSocketFactory(createSSLContextWithSSLAuth()) :
+                new SSLConnectionSocketFactory(SSLContexts.createSystemDefault(), NoopHostnameVerifier.INSTANCE);
     }
 
     /**
@@ -96,8 +98,8 @@ public class PoolingHttpClientManager {
         } catch (KeyManagementException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
-        }finally {
-            if(null != fileInputStream){
+        } finally {
+            if (null != fileInputStream) {
                 try {
                     fileInputStream.close();
                 } catch (IOException e) {
