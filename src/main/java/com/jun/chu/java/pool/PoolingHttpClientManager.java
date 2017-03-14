@@ -42,12 +42,12 @@ public class PoolingHttpClientManager {
     /**
      * 密钥库路径
      */
-    private String keyStorePath = "";
+    private String keyStorePath = "./src/main/resources/crt/tomcat.keystore";
 
     /**
      * 密钥库秘钥
      */
-    private String keyStorePass = "";
+    private String keyStorePass = "tomcat";
 
     //守护线程清理关闭闲置连接
     private IdleConnectionEvictor idleConnectionEvictor = null;
@@ -82,6 +82,10 @@ public class PoolingHttpClientManager {
         return isSSLAuth ? createSSLContextWithSSLAuth() : createSSLContextWithoutSSLAuth();
     }
 
+    /**
+     * 创建绕过证书验证的SSLContext
+     * @return
+     */
     private SSLContext createSSLContextWithoutSSLAuth() {
         SSLContext sslContext = null;
         try {
@@ -100,7 +104,7 @@ public class PoolingHttpClientManager {
     }
 
     /**
-     * 获取ssl验证的SSLContext
+     * 创建证书自验证的SSLContext
      *
      * @return
      */
