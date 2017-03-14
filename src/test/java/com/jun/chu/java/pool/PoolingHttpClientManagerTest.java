@@ -1,8 +1,8 @@
 package com.jun.chu.java.pool;
 
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.pool.PoolStats;
 import org.apache.log4j.Logger;
-import org.apache.log4j.or.ObjectRenderer;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -49,14 +49,48 @@ public class PoolingHttpClientManagerTest {
     }
 
     @Test
-    public void case03_https_post() throws IOException {
-        Map<String, Object> map = new HashMap<>();
-        map.put("signreqmsg","test");
-        sendPostReqeust("https://localhost:8443/zxbank/CBEC/test.do",map);
+    public void case03_https_post_without_ssl_auth() throws IOException {
+        sendPostRequest(cm.getHttpClient());
     }
 
-    private void sendPostReqeust(String url, Map<String, Object> map) throws IOException {
-        HttpUtils.doPostWithClient(cm.getHttpClient(), url, map);
+    @Test
+    public void case03_multi_thread_test_https_post_without_ssl_auth() throws IOException {
+        //1.启动监视线程
+        startMonitorThread();
+        //2.启动多线程
+        int count = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        for (int i = 0; i < count; i++) {
+            executorService.execute(() -> {
+                try {
+                    sendPostRequest(cm.getHttpClient());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        while (!executorService.isTerminated()) {
+            try {
+                executorService.awaitTermination(100, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    @Test
+    public void case03_https_post_with_ssl_auth() throws IOException {
+        PoolingHttpClientManager sslAuthCM = new PoolingHttpClientManager(10, 6000, 5000, true);
+        sendPostRequest(sslAuthCM.getHttpClient());
+    }
+
+
+    private void sendPostRequest(CloseableHttpClient httpClient) throws IOException {
+        Map<String, Object> map = new HashMap<>();
+        map.put("signreqmsg", "test");
+        HttpUtils.doPostWithClient(httpClient, "https://localhost:8443/zxbank/CBEC/test.do", map);
     }
 
     private void sendGetRequest() {

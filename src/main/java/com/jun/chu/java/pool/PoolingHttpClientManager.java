@@ -6,7 +6,6 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -86,10 +85,9 @@ public class PoolingHttpClientManager {
     private SSLContext createSSLContextWithoutSSLAuth() {
         SSLContext sslContext = null;
         try {
-            sslContext = SSLContext.getInstance("SSL");
-            TrustManager[] trustManagers = new TrustManager[1];
-            trustManagers[0] = new MyX509TrustManager();
-            sslContext.init(null, trustManagers, null);
+            //SSL,SSLv3
+            sslContext = SSLContext.getInstance("SSLv3");
+            sslContext.init(null, new TrustManager[]{new MyX509TrustManager()}, null);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             throw new RuntimeException("初始化SSLContext失败", e);
@@ -209,6 +207,9 @@ public class PoolingHttpClientManager {
                 .build();
     }
 
+    /**
+     * 实现一个X509TrustManager接口，用于绕过验证，不用修改里面的方法
+     */
     static class MyX509TrustManager implements X509TrustManager {
 
         @Override
