@@ -18,6 +18,8 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.log4j.Logger;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,6 +28,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -55,7 +58,7 @@ public class PoolingHttpClientManager {
         ConnectionSocketFactory plainsf = PlainConnectionSocketFactory.getSocketFactory();
 
         //ConnectionSocketFactory sslsf = SSLConnectionSocketFactory.getSocketFactory();
-        ConnectionSocketFactory sslsf = createConnectionSocketFactory(isSSLAuth);
+        ConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(createSSLContext(isSSLAuth));
         Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", plainsf)
                 .register("https", sslsf)
@@ -64,9 +67,38 @@ public class PoolingHttpClientManager {
                 registry);
     }
 
+    /**
+     * TODO:cj to be tested
+     *
+     * @param isSSLAuth
+     * @return
+     */
     private ConnectionSocketFactory createConnectionSocketFactory(boolean isSSLAuth) {
         return isSSLAuth ? new SSLConnectionSocketFactory(createSSLContextWithSSLAuth()) :
-                new SSLConnectionSocketFactory(SSLContexts.createSystemDefault(), NoopHostnameVerifier.INSTANCE);
+                new SSLConnectionSocketFactory(createSSLContextWithoutSSLAuth());
+
+    }
+
+    private SSLContext createSSLContext(boolean isSSLAuth) {
+        return isSSLAuth ? createSSLContextWithSSLAuth() : createSSLContextWithoutSSLAuth();
+    }
+
+    private SSLContext createSSLContextWithoutSSLAuth() {
+        SSLContext sslContext = null;
+        try {
+            sslContext = SSLContext.getInstance("SSL");
+            TrustManager[] trustManagers = new TrustManager[1];
+            trustManagers[0] = new MyX509TrustManager();
+            sslContext.init(null, trustManagers, null);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            throw new RuntimeException("初始化SSLContext失败", e);
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+            throw new RuntimeException("初始化SSLContext失败", e);
+        }
+        return sslContext;
+
     }
 
     /**
@@ -177,5 +209,22 @@ public class PoolingHttpClientManager {
                 .build();
     }
 
+    static class MyX509TrustManager implements X509TrustManager {
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            return;
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            return;
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+    }
 
 }
